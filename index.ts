@@ -2,7 +2,7 @@ import express from 'express';
 import {promises as fs} from 'fs';
 
 const app = express();
-const port = 8001;
+const port = 8002;
 app.use(express.json());
 const files = './messages';
 
@@ -13,6 +13,7 @@ app.post('/create', async (req, res) => {
         return;
     }
     const msg = JSON.stringify({message, date: new Date().toISOString()});
+    await fs.mkdir(files, { recursive: true });
     await fs.writeFile(`${files}/${new Date().toISOString()}.json`, msg);
     res.status(200).send(msg)
 });
