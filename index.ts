@@ -2,17 +2,32 @@ import express from 'express';
 import {promises as fs} from 'fs';
 
 const app = express();
-const port = 8000;
+const port = 8001;
 app.use(express.json());
+const files = './messages';
 
 app.post('/create', async (req, res) => {
-    const {message} = req.body;
-    console.log(message)
-    res.status(200).send(message);
+    const message = req.body.message;
+    if (!message) {
+        res.status(400).send('Message is required');
+        return;
+    }
+    const msg = JSON.stringify({message, date: new Date().toISOString()});
+    await fs.writeFile(`${files}/${new Date().toISOString()}.json`, msg);
+    res.status(200).send(msg)
 });
 
 app.get('/messages', async (req, res) => {
-    res.status(200).send('123')
+    const messages = await fs.readdir(files)
+    const messagesList: { message: string, date: string} [] = [];
+
+    for (const msg of messages) {
+        const data = await fs.readFile(`${files}/${msg}`, 'utf-8');
+        const parsed = JSON.parse(data);
+        messagesList.push(parsed);
+    }
+
+    res.status(200).send(messagesList.slice(-5))
 })
 
 const run = () => {
